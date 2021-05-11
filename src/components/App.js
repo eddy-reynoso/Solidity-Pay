@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Navbar from "./Navbar";
 import "./App.css";
 import Web3 from "web3";
+import ZombieFactory from "../abis/ZombieFactory.json";
 
 const App = () => {
     const [ethereumAccount, setEthereumAccount] = useState("0x0");
@@ -29,6 +30,25 @@ const App = () => {
         setEthereumAccount(accounts[0]);
 
         const networkId = await web3.eth.net.getId();
+
+        const CryptoZombiesData = ZombieFactory.networks[networkId];
+
+        if (CryptoZombiesData) {
+            const CryptoZombiesContract = new web3.eth.Contract(
+                ZombieFactory.abi,
+                CryptoZombiesData.address
+            );
+            /*
+            let zombie = await CryptoZombiesContract.methods
+                .createRandomZombie("EDDY")
+                .send({ from: accounts[0] });
+            console.log("NEW ZOMBIE", zombie);
+
+            */
+            let zombies = await CryptoZombiesContract.methods.zombies().call();
+
+            console.log("ZOMBIES", zombies);
+        }
     };
 
     return (
