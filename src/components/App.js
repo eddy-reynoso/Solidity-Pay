@@ -3,10 +3,35 @@ import Navbar from "./Navbar";
 import "./App.css";
 import web3 from "web3";
 import OnePay from "../abis/OnePay.json";
-import { getErrors } from "../Utilities";
+import { getErrors, getFormattedDate } from "../Utilities";
 import { useWeb3React } from "@web3-react/core";
+import Receivers from "./Receivers";
+import NewBeneficiaryForm from "./NewBeneficiaryForm";
+import {
+    createMuiTheme,
+    makeStyles,
+    ThemeProvider,
+} from "@material-ui/core/styles";
+import { orange } from "@material-ui/core/colors";
+import PaymentsTable from "./PaymentsTable";
+
+const useStyles = makeStyles((theme) => ({
+    root: {
+        backgroundColor: "rgb(245,246,248)",
+        margin: 0,
+        minHeight: "100vh",
+    },
+}));
+
+const theme = createMuiTheme({
+    status: {
+        danger: orange[500],
+    },
+});
 
 const App = () => {
+    let classes = useStyles();
+
     const { active, error, activate } = useWeb3React();
 
     const [ethereumAccount, setEthereumAccount] = useState("0x0");
@@ -22,7 +47,18 @@ const App = () => {
     const [smartContract, setSmartContract] = useState({});
 
     const [accountBalance, setAccountBalance] = useState("0");
+    const [paymentBeneficiaries, setPaymentBeneficiaries] = useState([]);
 
+    const [newBeneficiary, setNewBeneficiary] = useState({
+        paymentName: "Payment Name",
+        to: "",
+        paymentAmount: {
+            unformatted: "0",
+            formatted: "0",
+        },
+        paymentDate: getFormattedDate(new Date()),
+        interval: "daily",
+    });
     useEffect(() => {
         loadweb3();
         loadBlockchainData();
@@ -55,6 +91,25 @@ const App = () => {
         }
     }, [amountToWithdraw]);
 
+    useEffect(() => {
+        if (
+            Object.keys(getErrors(newBeneficiary.paymentAmount.unformatted))
+                .length === 0
+        ) {
+            let newBeneficiaryCopy = { ...newBeneficiary };
+            newBeneficiaryCopy.paymentAmount.formatted = web3.utils.toWei(
+                newBeneficiary.paymentAmount.unformatted.toString()
+            );
+
+            setNewBeneficiary({ ...newBeneficiaryCopy });
+        } else {
+            let newBeneficiaryCopy = { ...newBeneficiary };
+            newBeneficiaryCopy.paymentAmount.formatted = "Error";
+
+            setNewBeneficiary({ ...newBeneficiaryCopy });
+        }
+    }, [newBeneficiary.paymentAmount.unformatted]);
+
     const loadweb3 = async () => {
         if (window.ethereum) {
             window.web3 = new web3(window.ethereum);
@@ -82,7 +137,7 @@ const App = () => {
                 OnePayData.address
             );
 
-            watchEvents(OnePayContract);
+            watchEvents(OnePayContract, accounts[0]);
             setSmartContract(OnePayContract);
             console.log("ONE PAY DATA DOT ADDRESS", OnePayData.address);
 
@@ -98,19 +153,42 @@ const App = () => {
             setAccountBalance(userBalance);
             let address = await OnePayContract.methods.getAddress().call();
             console.log("Address: ", address);
+
+            let paymentBeneficiaries = await OnePayContract.methods
+                .getBeneficiaries()
+                .call({ from: accounts[0] });
+            setPaymentBeneficiaries([...paymentBeneficiaries]);
+
+            console.log("PAYMENT BENIFICIARIES", paymentBeneficiaries);
         }
     };
 
-    const watchEvents = async (OnePayContract) => {
+    const watchEvents = async (OnePayContract, account) => {
         console.log("WATCHING");
         OnePayContract.events.BalanceChanged({}, (error, data) => {
             if (error) {
                 console.log("ERROR", error);
             } else {
-                console.log("DATA", data);
+                console.log("SET NEW ACCOUNT BALANCE", data);
                 setAccountBalance(data.returnValues._newBalance);
             }
         });
+
+        OnePayContract.events.BeneficionariesChanged(
+            {},
+            async (error, data) => {
+                if (error) {
+                    console.log("ERROR", error);
+                } else {
+                    console.log("DATA", data);
+
+                    let paymentBeneficiaries = await OnePayContract.methods
+                        .getBeneficiaries()
+                        .call({ from: account });
+                    setPaymentBeneficiaries([...paymentBeneficiaries]);
+                }
+            }
+        );
     };
 
     const fundAccount = async () => {
@@ -139,97 +217,141 @@ const App = () => {
         setAmountToWithdraw(textInput);
     };
 
-    const addNewBeneficiary = async () => {
+    const dispersePayments = async () => {
+        await smartContract.methods
+            .dispersePayments()
+            .send({ from: ethereumAccount });
+    };
+
+    const handleSetNewBeneficiary = (event) => {
+        console.log("event.target", event.target);
+        if (event.target.id === "paymentName") {
+            setNewBeneficiary({
+                ...newBeneficiary,
+                paymentName: event.target.value,
+            });
+        }
+
+        if (event.target.id === "paymentAmount") {
+            let newBeneficiaryCopy = { ...newBeneficiary };
+            newBeneficiaryCopy.paymentAmount.unformatted = event.target.value;
+            setNewBeneficiary({ ...newBeneficiaryCopy });
+        }
+
+        if (event.target.id === "to") {
+            setNewBeneficiary({
+                ...newBeneficiary,
+                to: event.target.value,
+            });
+        }
+
+        if (event.target.id === "paymentDate") {
+            console.log("NEW DATE", event.target.value);
+            setNewBeneficiary({
+                ...newBeneficiary,
+                paymentDate: event.target.value,
+            });
+        }
+        if (event.target.id === "interval") {
+            setNewBeneficiary({
+                ...newBeneficiary,
+                interval: event.target.value,
+            });
+        }
+    };
+
+    const handleSubmitNewBeneficiary = async () => {
         await smartContract.methods
             .addNewBeneficiary(
-                "Payment 1",
-                "0xD5e95d34eeeCA2aa93a5e1e45b84eBa824c11265",
-                "100",
-                12,
-                5,
-                2021,
-                "monthly"
+                newBeneficiary.paymentName,
+                newBeneficiary.to,
+                newBeneficiary.paymentAmount.formatted,
+                new Date(newBeneficiary.paymentDate).getDate() + 1,
+                new Date(newBeneficiary.paymentDate).getMonth() + 1,
+                new Date(newBeneficiary.paymentDate).getFullYear(),
+                newBeneficiary.interval
             )
             .send({
                 from: ethereumAccount,
             });
     };
 
-    const getBeneficiary = async () => {
-        let currentMonth = await smartContract.methods.getCurrentMonth().call();
-        let currentYear = await smartContract.methods.getCurrentYear().call();
-
-        let payment = await smartContract.methods.payments(2).call();
-
-        console.log("PAYMENT", payment);
-        let currentDay = await smartContract.methods.getCurrentDay().call();
-
-        console.log("currentDay", currentDay);
-        console.log("currentMonth", currentMonth);
-        console.log("currentYear", currentYear);
-
-        let dispersePayments = await smartContract.methods
-            .dispersePayments()
+    const toggleBeneficiary = async (id) => {
+        let deletePayment = await smartContract.methods
+            .toggleBeneficiary(id)
             .send({ from: ethereumAccount });
-
-        console.log("dispersePayments", dispersePayments);
+        console.log("DELETE PAYMENT", deletePayment);
     };
 
     return (
-        <div>
-            <Navbar account={ethereumAccount} />
-            <div className="container-fluid mt-5">
-                <div className="row">
-                    <main
-                        role="main"
-                        className="col-lg-12 ml-auto mr-auto"
-                        style={{ maxWidth: "600px" }}
-                    >
-                        <div className="content mr-auto ml-auto">
-                            <a
-                                href="http://www.dappuniversity.com/bootcamp"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            ></a>
+        <ThemeProvider theme={theme}>
+            <div className={classes.root}>
+                <Navbar account={ethereumAccount} />
+                <div className="container-fluid mt-5">
+                    <div className="row">
+                        <main
+                            role="main"
+                            className="col-lg-12 ml-auto mr-auto"
+                            style={{ maxWidth: "600px" }}
+                        >
+                            <div className="content mr-auto ml-auto">
+                                <h1>
+                                    {" "}
+                                    {`Your account Balance: ${web3.utils.fromWei(
+                                        accountBalance,
+                                        "ether"
+                                    )}`}
+                                </h1>
+                                <input
+                                    value={amountToFund}
+                                    onChange={handleChangeAmountToFund}
+                                    type="number"
+                                    min={0}
+                                />
+                                <button onClick={fundAccount}>
+                                    Fund Account
+                                </button>
 
-                            <h1>
-                                {" "}
-                                {`Your account Balance: ${web3.utils.fromWei(
-                                    accountBalance,
-                                    "ether"
-                                )}`}
-                            </h1>
-                            <input
-                                value={amountToFund}
-                                onChange={handleChangeAmountToFund}
-                                type="number"
-                                min={0}
-                            />
-                            <button onClick={fundAccount}>Fund Account</button>
+                                <p>{`Amount to deposit in Wei: ${formattedAmountToFund}`}</p>
 
-                            <p>{`Amount to deposit in Wei: ${formattedAmountToFund}`}</p>
+                                <input
+                                    value={amountToWithdraw}
+                                    onChange={handleChangeAmountToWithdraw}
+                                    type="number"
+                                    min={0}
+                                />
+                                <button onClick={withdrawFromAccount}>
+                                    Withdraw From Account
+                                </button>
+                                <p>{`Amount to withdraw in Wei: ${formattedAmountToWithdraw}`}</p>
 
-                            <input
-                                value={amountToWithdraw}
-                                onChange={handleChangeAmountToWithdraw}
-                                type="number"
-                                min={0}
-                            />
-                            <button onClick={withdrawFromAccount}>
-                                Withdraw From Account
-                            </button>
-                            <p>{`Amount to withdraw in Wei: ${formattedAmountToWithdraw}`}</p>
-                            <button onClick={addNewBeneficiary}>
-                                Add new Beneficiary
-                            </button>
-                            <button onClick={getBeneficiary}>
-                                Get Beneficiary
-                            </button>
-                        </div>
-                    </main>
+                                <button onClick={dispersePayments}>
+                                    Disperse Payemnts
+                                </button>
+
+                                <NewBeneficiaryForm
+                                    newBeneficiary={newBeneficiary}
+                                    handleSetNewBeneficiary={
+                                        handleSetNewBeneficiary
+                                    }
+                                    handleSubmitNewBeneficiary={
+                                        handleSubmitNewBeneficiary
+                                    }
+                                />
+                                <Receivers
+                                    paymentBeneficiaries={paymentBeneficiaries}
+                                    toggleBeneficiary={toggleBeneficiary}
+                                />
+                            </div>
+                        </main>
+                    </div>
                 </div>
+                <PaymentsTable
+                    rows={paymentBeneficiaries}
+                    toggleBeneficiary={toggleBeneficiary}
+                />
             </div>
-        </div>
+        </ThemeProvider>
     );
 };
 

@@ -4,6 +4,8 @@
     "description": "DeFi Token Staking App",
     "author": "gregory@dappuniversity.com",
     "dependencies": {
+        "@material-ui/core": "^4.11.4",
+        "@material-ui/data-grid": "^4.0.0-alpha.28",
         "@web3-react/core": "^6.1.9",
         "babel-polyfill": "6.26.0",
         "babel-preset-env": "1.7.0",

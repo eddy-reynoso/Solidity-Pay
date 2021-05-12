@@ -20,3 +20,17 @@ export const getErrors = (amount) => {
     console.log("ERRORS", errors);
     return errors;
 };
+
+export const getFormattedDate = (date) => {
+    let day = date.getDate().toString();
+    if (day.length === 1) {
+        day = `0${day}`;
+    }
+    let month = (date.getMonth() + 1).toString();
+    if (month.length === 1) {
+        month = `0${month}`;
+    }
+    let year = date.getFullYear();
+
+    return `${year}-${month}-${day}`;
+};
