@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from "react";
-import Navbar from "./Navbar";
 import "./App.css";
 import web3 from "web3";
 import OnePay from "../abis/OnePay.json";
-import { getErrors, getFormattedDate } from "../Utilities";
+import { getErrors, getFormattedDateExtraDay } from "../Utilities";
 import { useWeb3React } from "@web3-react/core";
-import Receivers from "./Receivers";
 import NewBeneficiaryForm from "./NewBeneficiaryForm";
 import {
     createMuiTheme,
@@ -14,6 +12,10 @@ import {
 } from "@material-ui/core/styles";
 import { orange } from "@material-ui/core/colors";
 import PaymentsTable from "./PaymentsTable";
+import AccountFunding from "./AccountFunding";
+
+import Appbar from "./Appbar";
+import blue from "@material-ui/core/colors/blue";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -21,13 +23,33 @@ const useStyles = makeStyles((theme) => ({
         margin: 0,
         minHeight: "100vh",
     },
+    content: {
+        width: "80%",
+        margin: "auto",
+    },
 }));
 
 const theme = createMuiTheme({
     status: {
         danger: orange[500],
     },
+    palette: {
+        primary: blue,
+        secondary: orange,
+    },
 });
+
+const defaultForm = {
+    paymentName: "",
+    to: "",
+    paymentAmount: {
+        unformatted: "0",
+        formatted: "0",
+    },
+    paymentDate: getFormattedDateExtraDay(new Date()),
+    interval: "daily",
+    category: "bills",
+};
 
 const App = () => {
     let classes = useStyles();
@@ -50,14 +72,7 @@ const App = () => {
     const [paymentBeneficiaries, setPaymentBeneficiaries] = useState([]);
 
     const [newBeneficiary, setNewBeneficiary] = useState({
-        paymentName: "Payment Name",
-        to: "",
-        paymentAmount: {
-            unformatted: "0",
-            formatted: "0",
-        },
-        paymentDate: getFormattedDate(new Date()),
-        interval: "daily",
+        ...defaultForm,
     });
     useEffect(() => {
         loadweb3();
@@ -157,6 +172,7 @@ const App = () => {
             let paymentBeneficiaries = await OnePayContract.methods
                 .getBeneficiaries()
                 .call({ from: accounts[0] });
+            console.log("RETRIEVED PAYMENT BENE", paymentBeneficiaries);
             setPaymentBeneficiaries([...paymentBeneficiaries]);
 
             console.log("PAYMENT BENIFICIARIES", paymentBeneficiaries);
@@ -164,7 +180,6 @@ const App = () => {
     };
 
     const watchEvents = async (OnePayContract, account) => {
-        console.log("WATCHING");
         OnePayContract.events.BalanceChanged({}, (error, data) => {
             if (error) {
                 console.log("ERROR", error);
@@ -224,7 +239,6 @@ const App = () => {
     };
 
     const handleSetNewBeneficiary = (event) => {
-        console.log("event.target", event.target);
         if (event.target.id === "paymentName") {
             setNewBeneficiary({
                 ...newBeneficiary,
@@ -252,21 +266,28 @@ const App = () => {
                 paymentDate: event.target.value,
             });
         }
-        if (event.target.id === "interval") {
+        if (event.target.name === "interval") {
             setNewBeneficiary({
                 ...newBeneficiary,
                 interval: event.target.value,
             });
         }
+        if (event.target.name === "category") {
+            setNewBeneficiary({
+                ...newBeneficiary,
+                category: event.target.value,
+            });
+        }
     };
 
     const handleSubmitNewBeneficiary = async () => {
+        console.log("newBeneficiary.paymentDate", newBeneficiary.paymentDate);
         await smartContract.methods
             .addNewBeneficiary(
                 newBeneficiary.paymentName,
                 newBeneficiary.to,
                 newBeneficiary.paymentAmount.formatted,
-                new Date(newBeneficiary.paymentDate).getDate() + 1,
+                new Date(newBeneficiary.paymentDate).getDate(),
                 new Date(newBeneficiary.paymentDate).getMonth() + 1,
                 new Date(newBeneficiary.paymentDate).getFullYear(),
                 newBeneficiary.interval
@@ -274,6 +295,7 @@ const App = () => {
             .send({
                 from: ethereumAccount,
             });
+        setNewBeneficiary({ ...defaultForm });
     };
 
     const toggleBeneficiary = async (id) => {
@@ -283,73 +305,48 @@ const App = () => {
         console.log("DELETE PAYMENT", deletePayment);
     };
 
+    const handleSetNewDate = (date) => {
+        console.log("Unformatted DATE", date);
+
+        console.log("NEW DATE", getFormattedDateExtraDay(date));
+        setNewBeneficiary({
+            ...newBeneficiary,
+            paymentDate: getFormattedDateExtraDay(date),
+        });
+    };
+
     return (
         <ThemeProvider theme={theme}>
             <div className={classes.root}>
-                <Navbar account={ethereumAccount} />
-                <div className="container-fluid mt-5">
-                    <div className="row">
-                        <main
-                            role="main"
-                            className="col-lg-12 ml-auto mr-auto"
-                            style={{ maxWidth: "600px" }}
-                        >
-                            <div className="content mr-auto ml-auto">
-                                <h1>
-                                    {" "}
-                                    {`Your account Balance: ${web3.utils.fromWei(
-                                        accountBalance,
-                                        "ether"
-                                    )}`}
-                                </h1>
-                                <input
-                                    value={amountToFund}
-                                    onChange={handleChangeAmountToFund}
-                                    type="number"
-                                    min={0}
-                                />
-                                <button onClick={fundAccount}>
-                                    Fund Account
-                                </button>
+                <Appbar ethereumAccount={ethereumAccount} />
+                <div className={classes.content}>
+                    <h2>{`Account Funding`}</h2>
+                    <AccountFunding
+                        amountToFund={amountToFund}
+                        handleChangeAmountToFund={handleChangeAmountToFund}
+                        amountToWithdraw={amountToWithdraw}
+                        handleChangeAmountToWithdraw={
+                            handleChangeAmountToWithdraw
+                        }
+                        fundAccount={fundAccount}
+                        withdrawFromAccount={withdrawFromAccount}
+                        accountBalance={accountBalance}
+                    />
 
-                                <p>{`Amount to deposit in Wei: ${formattedAmountToFund}`}</p>
-
-                                <input
-                                    value={amountToWithdraw}
-                                    onChange={handleChangeAmountToWithdraw}
-                                    type="number"
-                                    min={0}
-                                />
-                                <button onClick={withdrawFromAccount}>
-                                    Withdraw From Account
-                                </button>
-                                <p>{`Amount to withdraw in Wei: ${formattedAmountToWithdraw}`}</p>
-
-                                <button onClick={dispersePayments}>
-                                    Disperse Payemnts
-                                </button>
-
-                                <NewBeneficiaryForm
-                                    newBeneficiary={newBeneficiary}
-                                    handleSetNewBeneficiary={
-                                        handleSetNewBeneficiary
-                                    }
-                                    handleSubmitNewBeneficiary={
-                                        handleSubmitNewBeneficiary
-                                    }
-                                />
-                                <Receivers
-                                    paymentBeneficiaries={paymentBeneficiaries}
-                                    toggleBeneficiary={toggleBeneficiary}
-                                />
-                            </div>
-                        </main>
-                    </div>
+                    <NewBeneficiaryForm
+                        newBeneficiary={newBeneficiary}
+                        handleSetNewBeneficiary={handleSetNewBeneficiary}
+                        handleSubmitNewBeneficiary={handleSubmitNewBeneficiary}
+                        handleSetNewDate={handleSetNewDate}
+                    />
+                    <PaymentsTable
+                        rows={paymentBeneficiaries}
+                        toggleBeneficiary={toggleBeneficiary}
+                    />
+                    <button onClick={dispersePayments}>
+                        Disperse Payemnts
+                    </button>
                 </div>
-                <PaymentsTable
-                    rows={paymentBeneficiaries}
-                    toggleBeneficiary={toggleBeneficiary}
-                />
             </div>
         </ThemeProvider>
     );

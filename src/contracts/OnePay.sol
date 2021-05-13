@@ -1,8 +1,8 @@
 pragma solidity ^0.5.0;
+pragma experimental ABIEncoderV2;
 
 import "./ownable.sol";
 import "./datetime.sol";
-pragma experimental ABIEncoderV2;
 
 contract OnePay is Ownable, DateTime {
 
@@ -47,30 +47,29 @@ contract OnePay is Ownable, DateTime {
     }
 
     function fundAccount() external payable {
-        require(msg.value>0);
-        ownerToBalance[msg.sender] = ownerToBalance[msg.sender]+msg.value;
+        require(msg.value > 0);
+        ownerToBalance[msg.sender] = ownerToBalance[msg.sender] + msg.value;
         emit BalanceChanged(msg.sender, ownerToBalance[msg.sender]);
     }
 
-    function withdrawFromAccount(uint256 _amount) external returns (bool){
-        require(_amount<=ownerToBalance[msg.sender]);
+    function withdrawFromAccount(uint256 _amount) external{
+        require(_amount <= ownerToBalance[msg.sender]);
         msg.sender.transfer(_amount);
         ownerToBalance[msg.sender] = ownerToBalance[msg.sender] - _amount;
         emit BalanceChanged(msg.sender, ownerToBalance[msg.sender]);
-        return true;
     }
 
     function getInterval(string memory _interval) public pure returns (uint){
-        if(keccak256(abi.encodePacked(_interval)) ==keccak256(abi.encodePacked("daily"))){
+        if(keccak256(abi.encodePacked(_interval)) == keccak256(abi.encodePacked("daily"))){
             return 1 days;
         }
-        if(keccak256(abi.encodePacked(_interval)) ==keccak256(abi.encodePacked("weekly"))){
+        if(keccak256(abi.encodePacked(_interval)) == keccak256(abi.encodePacked("weekly"))){
             return 7 days;
         }
-        if(keccak256(abi.encodePacked(_interval)) ==keccak256(abi.encodePacked("monthly"))){
+        if(keccak256(abi.encodePacked(_interval)) == keccak256(abi.encodePacked("monthly"))){
             return 30 days;
         }
-        if(keccak256(abi.encodePacked(_interval)) ==keccak256(abi.encodePacked("yearly"))){
+        if(keccak256(abi.encodePacked(_interval)) == keccak256(abi.encodePacked("yearly"))){
             return 365 days;
         }
     }
@@ -103,11 +102,9 @@ contract OnePay is Ownable, DateTime {
     }
     function getCurrentMonth() public view returns(uint8){
         return getMonth(now);
-
     }
-        function getCurrentYear() public view returns(uint16){
+    function getCurrentYear() public view returns(uint16){
         return getYear(now);
-
     }
 
     function paymentToday(Payment storage _payment) internal view returns(bool){
@@ -119,26 +116,21 @@ contract OnePay is Ownable, DateTime {
     function sendPayment(Payment storage _payment)internal{
         require(ownerToBalance[_payment.from] >= _payment.amount);
         _payment.to.transfer(_payment.amount);
-        ownerToBalance[_payment.from] = ownerToBalance[_payment.from]-_payment.amount;
+        ownerToBalance[_payment.from] = ownerToBalance[_payment.from] - _payment.amount;
         uint nextTimeStamp = now + _payment.interval;
         _payment.nextDay = getDay(nextTimeStamp);
         _payment.nextMonth = getMonth(nextTimeStamp);
         _payment.nextYear = getYear(nextTimeStamp);
-            emit BalanceChanged(msg.sender, ownerToBalance[msg.sender]);
-
+        emit BalanceChanged(msg.sender, ownerToBalance[msg.sender]);
     }
 
-    function dispersePayments() public returns (string memory){
+    function dispersePayments() public{
         for(uint i = 0; i < payments.length; i++){
             Payment storage currentPayment = payments[i];
             if(paymentToday(currentPayment) && currentPayment.active==true){
                 sendPayment(currentPayment);
-                return "abc";
             }
         }
-
-                        return "def";
-
     }
 
     function getBeneficiaries() public view returns (Payment[] memory){
