@@ -12,6 +12,7 @@ contract OnePay is Ownable, DateTime {
     struct Payment {
         uint id;
         string name;
+        string category;
         address from;
         address payable to;
         uint amount;
@@ -74,11 +75,12 @@ contract OnePay is Ownable, DateTime {
         }
     }
 
-    function addNewBeneficiary(string calldata _name, address payable _to, uint _amount, uint8 _day, uint8 _month, uint16 _year, string calldata _interval) external {
+    function addNewBeneficiary(string calldata _name, string calldata _category, address payable _to, uint _amount, uint8 _day, uint8 _month, uint16 _year, string calldata _interval) external {
         uint id = payments.length;
         Payment memory newPayment = Payment(
             id,
             _name,
+            _category,
             msg.sender,
             _to,
             _amount,
@@ -108,20 +110,19 @@ contract OnePay is Ownable, DateTime {
     }
 
     function paymentToday(Payment storage _payment) internal view returns(bool){
-        if( _payment.nextYear == getYear(now) && _payment.nextMonth == getMonth(now) && _payment.nextDay == getDay(now)){
+        //if( _payment.nextYear == getYear(now) && _payment.nextMonth == getMonth(now) && _payment.nextDay == getDay(now)){
             return true;
-        }
+        //}
     }
 
     function sendPayment(Payment storage _payment)internal{
         require(ownerToBalance[_payment.from] >= _payment.amount);
         _payment.to.transfer(_payment.amount);
         ownerToBalance[_payment.from] = ownerToBalance[_payment.from] - _payment.amount;
-        uint nextTimeStamp = now + _payment.interval;
+        uint nextTimeStamp = (now -1 days)+ _payment.interval;
         _payment.nextDay = getDay(nextTimeStamp);
         _payment.nextMonth = getMonth(nextTimeStamp);
         _payment.nextYear = getYear(nextTimeStamp);
-        emit BalanceChanged(msg.sender, ownerToBalance[msg.sender]);
     }
 
     function dispersePayments() public{
@@ -131,6 +132,7 @@ contract OnePay is Ownable, DateTime {
                 sendPayment(currentPayment);
             }
         }
+        emit BeneficionariesChanged(msg.sender);
     }
 
     function getBeneficiaries() public view returns (Payment[] memory){

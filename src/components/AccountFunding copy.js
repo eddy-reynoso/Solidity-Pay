@@ -5,7 +5,11 @@ import Button from "@material-ui/core/Button";
 import { makeStyles } from "@material-ui/core/styles";
 
 const useStyles = makeStyles((theme) => ({
-    container: { display: "flex", paddingBottom: "20px" },
+    container: {
+        display: "flex",
+        paddingBottom: "20px",
+        flexDirection: "column",
+    },
     left: {
         flex: 1,
         display: "flex",
@@ -26,7 +30,7 @@ const useStyles = makeStyles((theme) => ({
         justifyContent: "center",
     },
 }));
-const AccountFunding = (props) => {
+const FundAccount = (props) => {
     const classes = useStyles();
     const {
         amountToFund,
@@ -87,4 +91,4 @@ const AccountFunding = (props) => {
     );
 };
 
-export default AccountFunding;
+export default FundAccount;

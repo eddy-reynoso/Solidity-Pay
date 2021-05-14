@@ -6,14 +6,15 @@ import { makeStyles } from "@material-ui/core/styles";
 const getColumns = (toggleBeneficiary) => {
     return [
         { field: "id", headerName: "ID", width: 70 },
-        { field: "name", headerName: "Payment Name", width: 200 },
+        { field: "name", headerName: "Payment Name", width: 180 },
+        { field: "category", headerName: "Category", width: 180 },
 
-        { field: "to", headerName: "To", width: 400 },
-        { field: "amount", headerName: "Amount", width: 200 },
+        { field: "to", headerName: "To", width: 350 },
+        { field: "amount", headerName: "Amount", width: 180 },
         {
             field: "nextDay",
             headerName: "Next Payment Date",
-            width: 200,
+            width: 180,
             valueGetter: (params) => {
                 return `${params.row.nextMonth}/${params.row.nextDay}/${params.row.nextYear}`;
             },
@@ -21,7 +22,7 @@ const getColumns = (toggleBeneficiary) => {
         {
             field: "interval",
             headerName: "Interval",
-            width: 200,
+            width: 180,
             valueGetter: (params) => {
                 let interval = params.row.interval;
                 switch (interval) {
@@ -46,7 +47,7 @@ const getColumns = (toggleBeneficiary) => {
         {
             field: "active",
             headerName: "Enabled",
-            width: 200,
+            width: 180,
             renderCell: (params) => {
                 return (
                     <Switch
@@ -98,6 +99,27 @@ const PaymentsTable = (props) => {
     };
 
     const getFilteredRows = (rows) => {
+        let filters = chipData
+            .filter((chip) => {
+                if (chip.enabled) {
+                    return true;
+                }
+                return false;
+            })
+            .map((filteredChip) => filteredChip.label);
+        if (filters.length > 0) {
+            return rows.filter((row) => {
+                if (filters.includes(row.category)) {
+                    return true;
+                }
+                if (filters.includes("Enabled") && row.active) {
+                    return true;
+                }
+                if (filters.includes("Disabled") && !row.active) {
+                    return true;
+                }
+            });
+        }
         return rows;
     };
 

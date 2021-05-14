@@ -16,17 +16,8 @@ import Button from "@material-ui/core/Button";
 
 const useStyles = makeStyles((theme) => ({
     root: {},
-    firstRow: {
-        display: "flex",
-        justifyContent: "space-between",
-        paddingBottom: "20px",
-    },
-    secondRow: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingBottom: "50px",
-    },
+    container: {},
+
     paymentName: { flex: 1 },
     receiversAddress: { flex: 1 },
     paymentAmount: { flex: 1 },
@@ -51,120 +42,116 @@ const NewBeneficiaryForm = (props) => {
         handleSetNewDate,
     } = props;
     return (
-        <div>
+        <div className={classes.container}>
             <h2 className={classes.recurringPaymentHeader}>
                 New Recurring Payment
             </h2>
-            <div className={classes.firstRow}>
-                <div className={classes.paymentName}>
-                    <InputLabel htmlFor="paymentName">Payment Name</InputLabel>
-                    <TextField
-                        id="paymentName"
-                        value={newBeneficiary.paymentName}
-                        onChange={(e) => handleSetNewBeneficiary(e)}
-                        type="text"
-                        variant="outlined"
-                        className={classes.textField}
-                        placeholder="Enter Payment Name"
-                    />
-                </div>
-                <div className={classes.receiversAddress}>
-                    <InputLabel htmlFor="to">Receivers Address</InputLabel>
-                    <TextField
-                        id="to"
-                        value={newBeneficiary.to}
-                        onChange={(e) => handleSetNewBeneficiary(e)}
-                        type="text"
-                        variant="outlined"
-                        className={classes.textField}
-                        placeholder="Enter Receiver's Address"
-                    />
-                </div>
-                <div className={classes.paymentAmount}>
-                    <InputLabel htmlFor="paymentAmount">Amount</InputLabel>
-                    <OutlinedInput
-                        id="paymentAmount"
-                        value={newBeneficiary.paymentAmount.unformatted}
-                        onChange={(e) => handleSetNewBeneficiary(e)}
-                        type="number"
-                        variant="outlined"
-                        inputProps={{ min: 0 }}
-                        endAdornment={
-                            <InputAdornment position="end">ETH</InputAdornment>
-                        }
-                        className={classes.textField}
-                    />
-                </div>
+            <div className={classes.paymentName}>
+                <InputLabel htmlFor="paymentName">Payment Name</InputLabel>
+                <TextField
+                    id="paymentName"
+                    value={newBeneficiary.paymentName}
+                    onChange={(e) => handleSetNewBeneficiary(e)}
+                    type="text"
+                    variant="outlined"
+                    className={classes.textField}
+                    placeholder="Enter Payment Name"
+                />
             </div>
-            <div className={classes.secondRow}>
-                <div className={classes.paymentDate}>
-                    <InputLabel htmlFor="paymentDate">Payment date</InputLabel>
+            <div className={classes.receiversAddress}>
+                <InputLabel htmlFor="to">Receivers Address</InputLabel>
+                <TextField
+                    id="to"
+                    value={newBeneficiary.to}
+                    onChange={(e) => handleSetNewBeneficiary(e)}
+                    type="text"
+                    variant="outlined"
+                    className={classes.textField}
+                    placeholder="Enter Receiver's Address"
+                />
+            </div>
+            <div className={classes.paymentAmount}>
+                <InputLabel htmlFor="paymentAmount">Amount</InputLabel>
+                <OutlinedInput
+                    id="paymentAmount"
+                    value={newBeneficiary.paymentAmount.unformatted}
+                    onChange={(e) => handleSetNewBeneficiary(e)}
+                    type="number"
+                    variant="outlined"
+                    inputProps={{ min: 0 }}
+                    endAdornment={
+                        <InputAdornment position="end">ETH</InputAdornment>
+                    }
+                    className={classes.textField}
+                />
+            </div>
+            <div className={classes.paymentDate}>
+                <InputLabel htmlFor="paymentDate">Payment date</InputLabel>
 
-                    <MuiPickersUtilsProvider utils={DateFnsUtils}>
-                        <KeyboardDatePicker
-                            disableToolbar
-                            id="paymentDate"
-                            name="Payment Date"
-                            inputVariant="outlined"
-                            format="MM/dd/yyyy"
-                            value={newBeneficiary.paymentDate}
-                            onChange={handleSetNewDate}
-                            minDate={newBeneficiary.paymentDate}
-                            KeyboardButtonProps={{
-                                "aria-label": "change date",
-                            }}
-                            className={classes.textField}
-                        />
-                    </MuiPickersUtilsProvider>
-                </div>
-                <div className={classes.category}>
-                    <InputLabel htmlFor="category">Category</InputLabel>
-                    <Select
-                        labelId="category-label"
-                        id="category"
-                        name="category"
-                        value={newBeneficiary.category}
-                        onChange={(e) => handleSetNewBeneficiary(e)}
-                        variant="outlined"
+                <MuiPickersUtilsProvider utils={DateFnsUtils}>
+                    <KeyboardDatePicker
+                        disableToolbar
+                        id="paymentDate"
+                        name="Payment Date"
+                        inputVariant="outlined"
+                        format="MM/dd/yyyy"
+                        value={newBeneficiary.paymentDate}
+                        onChange={handleSetNewDate}
+                        minDate={newBeneficiary.paymentDate}
+                        KeyboardButtonProps={{
+                            "aria-label": "change date",
+                        }}
                         className={classes.textField}
-                    >
-                        <MenuItem name="category" value="bills">
-                            Bills
-                        </MenuItem>
-                        <MenuItem name="category" value="birthdays">
-                            Birthdays
-                        </MenuItem>
-                        <MenuItem name="category" value="payroll">
-                            Payroll
-                        </MenuItem>
-                    </Select>
-                </div>
+                    />
+                </MuiPickersUtilsProvider>
+            </div>
+            <div className={classes.category}>
+                <InputLabel htmlFor="category">Category</InputLabel>
+                <Select
+                    labelId="category-label"
+                    id="category"
+                    name="category"
+                    value={newBeneficiary.category}
+                    onChange={(e) => handleSetNewBeneficiary(e)}
+                    variant="outlined"
+                    className={classes.textField}
+                >
+                    <MenuItem name="category" value="Bills">
+                        Bills
+                    </MenuItem>
+                    <MenuItem name="category" value="Birthdays">
+                        Birthdays
+                    </MenuItem>
+                    <MenuItem name="category" value="Payroll">
+                        Payroll
+                    </MenuItem>
+                </Select>
+            </div>
 
-                <div className={classes.interval}>
-                    <InputLabel htmlFor="interval">Interval</InputLabel>
-                    <Select
-                        labelId="interval-label"
-                        id="interval"
-                        name="interval"
-                        value={newBeneficiary.interval}
-                        onChange={(e) => handleSetNewBeneficiary(e)}
-                        variant="outlined"
-                        className={classes.textField}
-                    >
-                        <MenuItem name="interval" value="daily">
-                            Daily
-                        </MenuItem>
-                        <MenuItem name="interval" value="weekly">
-                            Weekly
-                        </MenuItem>
-                        <MenuItem name="interval" value="monthly">
-                            Monthly
-                        </MenuItem>
-                        <MenuItem name="interval" value="yearly">
-                            Yearly
-                        </MenuItem>
-                    </Select>
-                </div>
+            <div className={classes.interval}>
+                <InputLabel htmlFor="interval">Interval</InputLabel>
+                <Select
+                    labelId="interval-label"
+                    id="interval"
+                    name="interval"
+                    value={newBeneficiary.interval}
+                    onChange={(e) => handleSetNewBeneficiary(e)}
+                    variant="outlined"
+                    className={classes.textField}
+                >
+                    <MenuItem name="interval" value="daily">
+                        Daily
+                    </MenuItem>
+                    <MenuItem name="interval" value="weekly">
+                        Weekly
+                    </MenuItem>
+                    <MenuItem name="interval" value="monthly">
+                        Monthly
+                    </MenuItem>
+                    <MenuItem name="interval" value="yearly">
+                        Yearly
+                    </MenuItem>
+                </Select>
             </div>
             <div className={classes.submitContainer}>
                 <Button

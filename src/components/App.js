@@ -12,10 +12,17 @@ import {
 } from "@material-ui/core/styles";
 import { orange } from "@material-ui/core/colors";
 import PaymentsTable from "./PaymentsTable";
-import AccountFunding from "./AccountFunding";
+import FundAccount from "./FundAccount";
+import WithdrawFromAccount from "./WithdrawFromAccount";
+
+import AppModal from "./AppModal";
 
 import Appbar from "./Appbar";
 import blue from "@material-ui/core/colors/blue";
+import Button from "@material-ui/core/Button";
+import Snackbar from "@material-ui/core/Snackbar";
+import IconButton from "@material-ui/core/IconButton";
+import CloseIcon from "@material-ui/icons/Close";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -42,13 +49,13 @@ const theme = createMuiTheme({
 const defaultForm = {
     paymentName: "",
     to: "",
+    category: "Bills",
     paymentAmount: {
         unformatted: "0",
         formatted: "0",
     },
     paymentDate: getFormattedDateExtraDay(new Date()),
     interval: "daily",
-    category: "bills",
 };
 
 const App = () => {
@@ -74,6 +81,13 @@ const App = () => {
     const [newBeneficiary, setNewBeneficiary] = useState({
         ...defaultForm,
     });
+
+    const [fundModalOpen, setFundModalOpen] = useState(false);
+    const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
+    const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState("");
     useEffect(() => {
         loadweb3();
         loadBlockchainData();
@@ -211,6 +225,10 @@ const App = () => {
             from: ethereumAccount,
             value: formattedAmountToFund,
         });
+        setAmountToFund("0");
+        setFormattedAmountToFund("0");
+        setFundModalOpen(false);
+        handleOpenSnackbar("fund");
     };
 
     const withdrawFromAccount = async () => {
@@ -220,6 +238,10 @@ const App = () => {
             .send({
                 from: ethereumAccount,
             });
+        setAmountToWithdraw("0");
+        setFormattedAmountToWithdraw("0");
+        setWithdrawModalOpen(false);
+        handleOpenSnackbar("withdraw");
     };
 
     const handleChangeAmountToFund = (event) => {
@@ -285,6 +307,8 @@ const App = () => {
         await smartContract.methods
             .addNewBeneficiary(
                 newBeneficiary.paymentName,
+                newBeneficiary.category,
+
                 newBeneficiary.to,
                 newBeneficiary.paymentAmount.formatted,
                 new Date(newBeneficiary.paymentDate).getDate(),
@@ -296,6 +320,8 @@ const App = () => {
                 from: ethereumAccount,
             });
         setNewBeneficiary({ ...defaultForm });
+        setPaymentModalOpen(false);
+        handleOpenSnackbar("new");
     };
 
     const toggleBeneficiary = async (id) => {
@@ -315,30 +341,128 @@ const App = () => {
         });
     };
 
+    const handleModalClose = () => {
+        setFundModalOpen(false);
+        setPaymentModalOpen(false);
+        setWithdrawModalOpen(false);
+    };
+
+    const handleModalOpen = (type) => {
+        switch (type) {
+            case "fund": {
+                setFundModalOpen(true);
+                setWithdrawModalOpen(false);
+                setPaymentModalOpen(false);
+                break;
+            }
+            case "withdraw": {
+                setFundModalOpen(false);
+                setWithdrawModalOpen(true);
+                setPaymentModalOpen(false);
+                break;
+            }
+            case "new": {
+                setFundModalOpen(false);
+                setWithdrawModalOpen(false);
+                setPaymentModalOpen(true);
+                break;
+            }
+            default: {
+                return;
+            }
+        }
+    };
+
+    const handleOpenSnackbar = (type) => {
+        switch (type) {
+            case "fund": {
+                setSnackbarMessage("Account successfully funded.");
+                setSnackbarOpen(true);
+                break;
+            }
+            case "withdraw": {
+                setSnackbarMessage("Account withdrawal successful.");
+                setSnackbarOpen(true);
+
+                break;
+            }
+            case "new": {
+                setSnackbarMessage("Automated payment added successfully.");
+                setSnackbarOpen(true);
+
+                break;
+            }
+            default: {
+                return;
+            }
+        }
+    };
+
     return (
         <ThemeProvider theme={theme}>
             <div className={classes.root}>
-                <Appbar ethereumAccount={ethereumAccount} />
+                <Appbar
+                    ethereumAccount={ethereumAccount}
+                    handleSubmitNewBeneficiary={handleSubmitNewBeneficiary}
+                    handleModalOpen={handleModalOpen}
+                />
                 <div className={classes.content}>
                     <h2>{`Account Funding`}</h2>
-                    <AccountFunding
-                        amountToFund={amountToFund}
-                        handleChangeAmountToFund={handleChangeAmountToFund}
-                        amountToWithdraw={amountToWithdraw}
-                        handleChangeAmountToWithdraw={
-                            handleChangeAmountToWithdraw
+
+                    <AppModal
+                        body={
+                            <FundAccount
+                                amountToFund={amountToFund}
+                                handleChangeAmountToFund={
+                                    handleChangeAmountToFund
+                                }
+                                fundAccount={fundAccount}
+                                witdrawFromAccount={withdrawFromAccount}
+                                accountBalance={accountBalance}
+                            />
                         }
-                        fundAccount={fundAccount}
-                        withdrawFromAccount={withdrawFromAccount}
-                        accountBalance={accountBalance}
+                        open={fundModalOpen}
+                        handleOpen={() => console.log("ipen")}
+                        handleClose={handleModalClose}
+                        type="fund"
                     />
 
-                    <NewBeneficiaryForm
-                        newBeneficiary={newBeneficiary}
-                        handleSetNewBeneficiary={handleSetNewBeneficiary}
-                        handleSubmitNewBeneficiary={handleSubmitNewBeneficiary}
-                        handleSetNewDate={handleSetNewDate}
+                    <AppModal
+                        body={
+                            <WithdrawFromAccount
+                                amountToWithdraw={amountToWithdraw}
+                                handleChangeAmountToWithdraw={
+                                    handleChangeAmountToWithdraw
+                                }
+                                withdrawFromAccount={withdrawFromAccount}
+                                accountBalance={accountBalance}
+                            />
+                        }
+                        open={withdrawModalOpen}
+                        handleOpen={() => console.log("ipen")}
+                        handleClose={handleModalClose}
+                        type="withdraw"
                     />
+
+                    <AppModal
+                        body={
+                            <NewBeneficiaryForm
+                                newBeneficiary={newBeneficiary}
+                                handleSetNewBeneficiary={
+                                    handleSetNewBeneficiary
+                                }
+                                handleSubmitNewBeneficiary={
+                                    handleSubmitNewBeneficiary
+                                }
+                                handleSetNewDate={handleSetNewDate}
+                            />
+                        }
+                        open={paymentModalOpen}
+                        handleOpen={() => console.log("ipen")}
+                        handleClose={handleModalClose}
+                        type="payment"
+                    />
+
                     <PaymentsTable
                         rows={paymentBeneficiaries}
                         toggleBeneficiary={toggleBeneficiary}
@@ -347,6 +471,28 @@ const App = () => {
                         Disperse Payemnts
                     </button>
                 </div>
+                <Snackbar
+                    anchorOrigin={{
+                        vertical: "bottom",
+                        horizontal: "left",
+                    }}
+                    open={snackbarOpen}
+                    autoHideDuration={6000}
+                    onClose={() => setSnackbarOpen(false)}
+                    message={snackbarMessage}
+                    action={
+                        <React.Fragment>
+                            <IconButton
+                                size="small"
+                                aria-label="close"
+                                color="inherit"
+                                onClose={() => setSnackbarOpen(false)}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        </React.Fragment>
+                    }
+                />
             </div>
         </ThemeProvider>
     );
