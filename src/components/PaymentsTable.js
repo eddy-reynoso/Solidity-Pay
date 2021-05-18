@@ -68,11 +68,25 @@ const useStyles = makeStyles((theme) => ({
         listStyle: "none",
         padding: theme.spacing(0.5),
         margin: 0,
-        backgroundColor: "rgb(245,246,248)",
+        backgroundColor: "rgb(26,29,33)",
         marginBottom: "20px",
+        marginTop: "30px",
     },
     chip: {
         margin: theme.spacing(0.5),
+        color: "white",
+        borderRadius: "3px",
+        fontSize: "20px",
+    },
+    container: {
+        "& div.react-grid-Container": {
+            color: "red",
+            // color: theme.palette.text.color
+        },
+    },
+    ".MuiDataGrid-root": {
+        backgroundColor: "aliceblue",
+        color: "white",
     },
 }));
 
@@ -83,7 +97,7 @@ const PaymentsTable = (props) => {
     const [chipData, setChipData] = React.useState([
         { key: 0, label: "Bills", enabled: false },
         { key: 1, label: "Payroll", enabled: false },
-        { key: 2, label: "Birthday Gifts", enabled: false },
+        { key: 2, label: "Birthdays", enabled: false },
         { key: 3, label: "Enabled", enabled: false },
         { key: 4, label: "Disabled", enabled: false },
     ]);
@@ -126,7 +140,7 @@ const PaymentsTable = (props) => {
     let columns = getColumns(toggleBeneficiary);
     let filteredRows = getFilteredRows(rows);
     return (
-        <>
+        <div className={classes.container}>
             <h2>Payments</h2>
             <Paper component="ul" className={classes.root}>
                 {chipData.map((data) => {
@@ -145,10 +159,19 @@ const PaymentsTable = (props) => {
                     );
                 })}
             </Paper>
-            <div style={{ height: 400 }}>
-                <DataGrid rows={filteredRows} columns={columns} pageSize={5} />
+            <div style={{ height: 400, color: "white" }}>
+                <DataGrid
+                    rows={filteredRows}
+                    columns={columns}
+                    pageSize={5}
+                    style={{ color: "white" }}
+                    className={classes.container}
+                    classes={{
+                        root: classes.container,
+                    }}
+                />
             </div>
-        </>
+        </div>
     );
 };
 

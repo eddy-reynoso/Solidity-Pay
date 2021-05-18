@@ -16,18 +16,23 @@ import Button from "@material-ui/core/Button";
 
 const useStyles = makeStyles((theme) => ({
     root: {},
-    container: {},
+    container: {
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+    },
 
-    paymentName: { flex: 1 },
-    receiversAddress: { flex: 1 },
-    paymentAmount: { flex: 1 },
-    paymentDate: { flex: 1, minWidth: 250 },
-    interval: { flex: 1 },
-    category: { flex: 1 },
+    paymentName: { flex: 1, marginTop: "10px" },
+    receiversAddress: { flex: 1, marginTop: "10px" },
+    paymentAmount: { flex: 1, marginTop: "10px" },
+    paymentDate: { flex: 1, minWidth: 250, marginTop: "10px" },
+    interval: { flex: 1, marginTop: "10px" },
+    category: { flex: 1, marginTop: "10px" },
     textField: { minWidth: 300 },
     submitContainer: {
         display: "flex",
         justifyContent: "center",
+        marginTop: "20px",
     },
     recurringPaymentHeader: { paddingBottom: "20px" },
 }));

@@ -7,6 +7,9 @@ const useStyles = makeStyles((theme) => ({
         flexGrow: 1,
         marginBottom: "2%",
     },
+    appbar: {
+        backgroundColor: "rgb(26,29,33)",
+    },
     menuButton: {
         marginRight: theme.spacing(2),
     },
@@ -24,13 +27,13 @@ const useStyles = makeStyles((theme) => ({
 }));
 const Appbar = (props) => {
     const classes = useStyles();
-    const { ethereumAccount, handleModalOpen } = props;
+    const { ethereumAccount, handleModalOpen, dispersePayments } = props;
     return (
         <div className={classes.root}>
-            <AppBar position="static">
+            <AppBar position="static" className={classes.appbar}>
                 <Toolbar>
                     <Typography variant="h6" className={classes.title}>
-                        One Pay
+                        Solidity Pay
                     </Typography>
                     <div className={classes.leftButton}>
                         <Button
@@ -63,6 +66,17 @@ const Appbar = (props) => {
                             Withdrawal
                         </Button>
                     </div>
+
+                    <div className={classes.rightButton}>
+                        <Button
+                            onClick={dispersePayments}
+                            variant="contained"
+                            color="secondary"
+                            size="large"
+                        >
+                            Disperse Payements
+                        </Button>
+                    </div>
                 </Toolbar>
             </AppBar>
         </div>
@@ -72,5 +86,13 @@ const Appbar = (props) => {
 export default Appbar;
 
 /*
-
+                    <Button
+                        onClick={dispersePayments}
+                        variant="contained"
+                        color="secondary"
+                        size="large"
+                        className={classes.dispersePayment}
+                    >
+                        Disperse Payements
+                    </Button>
 */

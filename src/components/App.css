@@ -1,1 +1,4 @@
 /* Styles go here */
+.MuiDataGrid-root {
+    color: "white";
+}

@@ -2,7 +2,11 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 import web3 from "web3";
 import OnePay from "../abis/OnePay.json";
-import { getErrors, getFormattedDateExtraDay } from "../Utilities";
+import {
+    getErrors,
+    getFormattedDateExtraDay,
+    getFormattedDate,
+} from "../Utilities";
 import { useWeb3React } from "@web3-react/core";
 import NewBeneficiaryForm from "./NewBeneficiaryForm";
 import {
@@ -26,13 +30,53 @@ import CloseIcon from "@material-ui/icons/Close";
 
 const useStyles = makeStyles((theme) => ({
     root: {
-        backgroundColor: "rgb(245,246,248)",
         margin: 0,
         minHeight: "100vh",
     },
     content: {
         width: "80%",
         margin: "auto",
+    },
+
+    dispersePayment: {
+        margin: "auto",
+        marginTop: "20px",
+        width: "20%",
+    },
+    information: {
+        display: "flex",
+        justifyContent: "space-between",
+        flexDirection: "row",
+
+        alignItems: "center",
+        width: "100%",
+        marginTop: "50px",
+    },
+    left: {
+        display: "flex",
+        flex: 1,
+        flexDirection: "column",
+        width: "33%",
+        margin: "auto",
+    },
+    middle: {
+        display: "flex",
+        flex: 1,
+        flexDirection: "column",
+        width: "33%",
+        margin: "auto",
+    },
+    right: {
+        display: "flex",
+        flex: 1,
+        flexDirection: "column",
+        width: "33%",
+        margin: "auto",
+    },
+    headingText: {
+        display: "inline",
+        margin: "auto",
+        marginBottom: "50px",
     },
 }));
 
@@ -103,17 +147,27 @@ const App = () => {
 
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState("");
+
+    const [totalPaymentsAmount, setTotalPaymentsAmount] = useState(0);
+
     useEffect(() => {
         loadweb3();
         loadBlockchainData();
     }, []);
 
     useEffect(() => {
+        let amount = 0;
+        paymentBeneficiaries.forEach((beneficiary) => {
+            if (beneficiary.active) amount += Number(beneficiary.amount);
+        });
+
+        setTotalPaymentsAmount(web3.utils.fromWei(amount.toString(), "Ether"));
+    }, [paymentBeneficiaries]);
+
+    useEffect(() => {
         const { ethereum } = window;
         if (ethereum && ethereum.on && !active && !error) {
-            ethereum.on("BalanceChanged", () => {
-                console.log("BALNCED CHANGED");
-            });
+            ethereum.on("BalanceChanged", () => {});
         }
     }, [active, error, activate]);
 
@@ -168,7 +222,6 @@ const App = () => {
     const loadBlockchainData = async () => {
         const web3 = window.web3;
         const accounts = await web3.eth.getAccounts();
-        console.log(accounts);
         setEthereumAccount(accounts[0]);
 
         const networkId = await web3.eth.net.getId();
@@ -183,37 +236,29 @@ const App = () => {
 
             watchEvents(OnePayContract, accounts[0]);
             setSmartContract(OnePayContract);
-            console.log("ONE PAY DATA DOT ADDRESS", OnePayData.address);
 
             let contractBalance = await OnePayContract.methods
                 .getSmartContractBalance()
                 .call();
-            console.log("CONTRACT BALANCE", contractBalance);
 
             let userBalance = await OnePayContract.methods
                 .getUserBalance()
                 .call({ from: accounts[0] });
-            console.log("USER BALANCE", userBalance);
             setAccountBalance(userBalance);
             let address = await OnePayContract.methods.getAddress().call();
-            console.log("Address: ", address);
 
             let paymentBeneficiaries = await OnePayContract.methods
                 .getBeneficiaries()
                 .call({ from: accounts[0] });
-            console.log("RETRIEVED PAYMENT BENE", paymentBeneficiaries);
             setPaymentBeneficiaries([...paymentBeneficiaries]);
-
-            console.log("PAYMENT BENIFICIARIES", paymentBeneficiaries);
         }
     };
 
     const watchEvents = async (OnePayContract, account) => {
         OnePayContract.events.BalanceChanged({}, (error, data) => {
             if (error) {
-                console.log("ERROR", error);
+                return;
             } else {
-                console.log("SET NEW ACCOUNT BALANCE", data);
                 setAccountBalance(data.returnValues._newBalance);
             }
         });
@@ -222,10 +267,8 @@ const App = () => {
             {},
             async (error, data) => {
                 if (error) {
-                    console.log("ERROR", error);
+                    return;
                 } else {
-                    console.log("DATA", data);
-
                     let paymentBeneficiaries = await OnePayContract.methods
                         .getBeneficiaries()
                         .call({ from: account });
@@ -247,7 +290,6 @@ const App = () => {
     };
 
     const withdrawFromAccount = async () => {
-        console.log("WITHDRAW THIS MUCH", amountToWithdraw);
         await smartContract.methods
             .withdrawFromAccount(formattedAmountToWithdraw)
             .send({
@@ -297,7 +339,6 @@ const App = () => {
         }
 
         if (event.target.id === "paymentDate") {
-            console.log("NEW DATE", event.target.value);
             setNewBeneficiary({
                 ...newBeneficiary,
                 paymentDate: event.target.value,
@@ -318,7 +359,6 @@ const App = () => {
     };
 
     const handleSubmitNewBeneficiary = async () => {
-        console.log("newBeneficiary.paymentDate", newBeneficiary.paymentDate);
         await smartContract.methods
             .addNewBeneficiary(
                 newBeneficiary.paymentName,
@@ -343,13 +383,9 @@ const App = () => {
         let deletePayment = await smartContract.methods
             .toggleBeneficiary(id)
             .send({ from: ethereumAccount });
-        console.log("DELETE PAYMENT", deletePayment);
     };
 
     const handleSetNewDate = (date) => {
-        console.log("Unformatted DATE", date);
-
-        console.log("NEW DATE", getFormattedDateExtraDay(date));
         setNewBeneficiary({
             ...newBeneficiary,
             paymentDate: getFormattedDateExtraDay(date),
@@ -420,10 +456,38 @@ const App = () => {
                     ethereumAccount={ethereumAccount}
                     handleSubmitNewBeneficiary={handleSubmitNewBeneficiary}
                     handleModalOpen={handleModalOpen}
+                    dispersePayments={dispersePayments}
                 />
                 <div className={classes.content}>
                     <h2>{`Account Funding`}</h2>
+                    <div className={classes.information}>
+                        <div className={classes.left}>
+                            <h3 className={classes.headingText}>{`Balance`}</h3>
 
+                            <p
+                                className={classes.headingText}
+                            >{`${web3.utils.fromWei(
+                                accountBalance,
+                                "Ether"
+                            )} ETH`}</p>
+                        </div>
+                        <div className={classes.middle}>
+                            <h3
+                                className={classes.headingText}
+                            >{`Total Payments Amount`}</h3>
+                            <p
+                                className={classes.headingText}
+                            >{`${totalPaymentsAmount} ETH`}</p>
+                        </div>
+                        <div className={classes.right}>
+                            <h3
+                                className={classes.headingText}
+                            >{`Current Date`}</h3>
+                            <p
+                                className={classes.headingText}
+                            >{` ${getFormattedDate(new Date())}`}</p>
+                        </div>
+                    </div>
                     <AppModal
                         body={
                             <FundAccount
@@ -437,7 +501,6 @@ const App = () => {
                             />
                         }
                         open={fundModalOpen}
-                        handleOpen={() => console.log("ipen")}
                         handleClose={handleModalClose}
                         type="fund"
                     />
@@ -454,7 +517,6 @@ const App = () => {
                             />
                         }
                         open={withdrawModalOpen}
-                        handleOpen={() => console.log("ipen")}
                         handleClose={handleModalClose}
                         type="withdraw"
                     />
@@ -473,7 +535,6 @@ const App = () => {
                             />
                         }
                         open={paymentModalOpen}
-                        handleOpen={() => console.log("ipen")}
                         handleClose={handleModalClose}
                         type="payment"
                     />
@@ -482,9 +543,6 @@ const App = () => {
                         rows={paymentBeneficiaries}
                         toggleBeneficiary={toggleBeneficiary}
                     />
-                    <button onClick={dispersePayments}>
-                        Disperse Payemnts
-                    </button>
                 </div>
                 <Snackbar
                     anchorOrigin={{
