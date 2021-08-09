@@ -21,11 +21,11 @@ const useStyles = makeStyles((theme) => ({
 const AppModal = (props) => {
     const classes = useStyles();
 
-    const { body, handleClose, open, handleModalClose } = props;
+    const { body, open, handleModalClose } = props;
     return (
         <Modal
             open={open}
-            onClose={handleClose}
+            onClose={handleModalClose}
             aria-labelledby="simple-modal-title"
             aria-describedby="simple-modal-description"
             className={classes.modal}

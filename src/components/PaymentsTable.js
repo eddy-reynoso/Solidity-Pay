@@ -132,6 +132,7 @@ const PaymentsTable = (props) => {
                 if (filters.includes("Disabled") && !row.active) {
                     return true;
                 }
+                return false;
             });
         }
         return rows;

@@ -22,12 +22,11 @@ const useStyles = makeStyles((theme) => ({
     middleButton: {
         padding: "10px",
     },
-
     rightButton: { padding: "10px" },
 }));
 const Appbar = (props) => {
     const classes = useStyles();
-    const { ethereumAccount, handleModalOpen, dispersePayments } = props;
+    const { handleModalOpen, dispersePayments } = props;
     return (
         <div className={classes.root}>
             <AppBar position="static" className={classes.appbar}>
@@ -84,15 +83,3 @@ const Appbar = (props) => {
 };
 
 export default Appbar;
-
-/*
-                    <Button
-                        onClick={dispersePayments}
-                        variant="contained"
-                        color="secondary"
-                        size="large"
-                        className={classes.dispersePayment}
-                    >
-                        Disperse Payements
-                    </Button>
-*/

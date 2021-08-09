@@ -40,10 +40,7 @@ const AccountFunding = (props) => {
     const {
         amountToFund,
         handleChangeAmountToFund,
-        amountToWithdraw,
-        handleChangeAmountToWithdraw,
         fundAccount,
-        withdrawFromAccount,
         accountBalance,
     } = props;
     return (
