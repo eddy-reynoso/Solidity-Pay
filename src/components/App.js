@@ -278,9 +278,12 @@ const App = () => {
     };
 
     const dispersePayments = async () => {
-        await smartContract.methods
+        console.log("dispersePayments ethereumAccount", ethereumAccount);
+        let response = await smartContract.methods
             .dispersePayments()
             .send({ from: ethereumAccount });
+
+        console.log("RES", response);
     };
 
     const handleSetNewBeneficiary = (event) => {
