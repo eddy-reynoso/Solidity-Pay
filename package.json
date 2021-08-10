@@ -1,6 +1,9 @@
 {
     "name": "defi-tutorial",
     "version": "0.1.0",
+    "engines": {
+        "node": "10.x"
+      },
     "description": "DeFi Token Staking App",
     "author": "gregory@dappuniversity.com",
     "dependencies": {
