@@ -4,7 +4,7 @@ require("babel-polyfill");
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 const projectId = process.env.PROJECT_ID;
 const mnemonic = process.env.NEUMONIC;
-
+//
 module.exports = {
     networks: {
         development: {
