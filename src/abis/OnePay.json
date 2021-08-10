@@ -16398,6 +16398,64 @@
     "version": "0.5.16+commit.9c3226ce.Emscripten.clang"
   },
   "networks": {
+    "3": {
+      "events": {
+        "0xa448afda7ea1e3a7a10fcab0c29fe9a9dd85791503bf0171f281521551c7ec05": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "_owner",
+              "type": "address"
+            },
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "_newBalance",
+              "type": "uint256"
+            }
+          ],
+          "name": "BalanceChanged",
+          "type": "event"
+        },
+        "0x0a79189c04c0f3c335646a007e34407f83a6fbcb6c24c426c9de6be912a6821c": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "_owner",
+              "type": "address"
+            }
+          ],
+          "name": "BeneficionariesChanged",
+          "type": "event"
+        },
+        "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "previousOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipTransferred",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x8a8aa2E0bEFd632d6a9e2C990F8dA3D843CD91C8",
+      "transactionHash": "0x7c3384868f22e5df89794ec664482860d033ba57859444ef2f06e82538e302ff"
+    },
     "5777": {
       "events": {
         "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0": {
@@ -16585,12 +16643,12 @@
         }
       },
       "links": {},
-      "address": "0x57D850FD92637657b581dac14fCa7a8bA3Be3350",
-      "transactionHash": "0x6f739e6ce300462636313f0f897dc56c5b8e40da647e8f3ccf7107ec262e927a"
+      "address": "0x36E0CFF41b024A08a9277013A63e38Aa1304B500",
+      "transactionHash": "0xafc7dbd363acd207c75955065b94891b35cb7e8532fc6e79a4da7e4fc376e60a"
     }
   },
   "schemaVersion": "3.2.3",
-  "updatedAt": "2021-08-09T21:09:46.798Z",
+  "updatedAt": "2021-08-10T01:24:16.486Z",
   "networkType": "ethereum",
   "devdoc": {
     "methods": {
